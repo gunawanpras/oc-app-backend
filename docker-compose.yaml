@@ -19,7 +19,7 @@ services:
       - "5500:5500"
     volumes:
       - oracle-xe-data:/opt/oracle/oradata
-      - ./startup-scripts:/opt/oracle/scripts/startup
+      - ./startup-scripts:/opt/oracle/scripts/setup
     command: >
       bash -c "
         echo 'Fixing volume permissions...';

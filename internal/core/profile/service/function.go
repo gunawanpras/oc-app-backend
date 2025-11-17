@@ -36,14 +36,6 @@ func (service *ProfileService) CreateProfile(ctx context.Context, profile domain
 }
 
 func (service *ProfileService) UpdateProfile(ctx context.Context, profile domain.Profile) (res domain.Profile, err error) {
-	// var r dto.ProfileDetail
-
-	// err = json.Unmarshal(profile.Detail, &r)
-	// if err != nil {
-	// 	return res, err
-	// }
-
-	// log.Printf("PRFILE %+v", r)
 	res, err = service.repo.ProfileRepo.UpdateProfile(ctx, profile)
 	if err != nil {
 		return res, err
