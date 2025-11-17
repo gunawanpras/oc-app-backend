@@ -1,0 +1,36 @@
+FROM golang:1.24-alpine AS builder
+
+ARG ENVIRONMENT=ENVIRONMENT
+
+ENV ENV=${ENVIRONMENT}
+ENV PATH="/usr/local/go/bin:${PATH}"
+
+WORKDIR /oc-app-backend
+
+COPY . .
+
+COPY config.yaml config.yaml
+
+COPY .env.development .env.application
+
+RUN go version && go mod download && go mod verify && \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags godror_no_oci -ldflags "-X main.version=1.0.0 -X main.buildTime=$(date +%Y-%m-%d) -s -w" -o ./oc-app-backend ./cmd
+
+
+FROM alpine:latest
+
+ENV TZ=Asia/Jakarta
+ENV ORACLE_SID=XE
+ENV GODROR_DRIVER_MODE=thin
+
+WORKDIR /oc-app-backend
+
+RUN apk update && apk add --no-cache gcompat tzdata    
+
+COPY --from=builder /oc-app-backend/oc-app-backend .
+COPY --from=builder /oc-app-backend/.env.application .env
+COPY --from=builder /oc-app-backend/config.yaml .
+ 
+RUN chmod +x ./oc-app-backend
+
+CMD ["./oc-app-backend"]

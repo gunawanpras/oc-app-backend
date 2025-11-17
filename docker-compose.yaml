@@ -1,0 +1,64 @@
+networks:
+  oracle_app:
+    external: true
+
+services:
+  database:
+    shm_size: '2gb'
+    image: gvenzl/oracle-xe:21.3.0
+    container_name: oc-app-database
+    restart: unless-stopped
+    environment:
+      - ORACLE_PASSWORD=Oracle_123
+      - APP_USER=myapp
+      - APP_USER_PASSWORD=mypass
+      - ORACLE_CHARACTERSET=AL32UTF8
+      - ORACLE_DISABLE_ASYNCH_IO=true
+    ports:
+      - "1521:1521"
+      - "5500:5500"
+    volumes:
+      - oracle-xe-data:/opt/oracle/oradata
+      - ./startup-scripts:/opt/oracle/scripts/startup
+    command: >
+      bash -c "
+        echo 'Fixing volume permissions...';
+        chown -R 54321:54321 /opt/oracle/oradata;
+        echo 'Starting Oracle XE...';
+        exec /bin/bash /entrypoint.sh
+      "
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo 'exit' | sqlplus -L system/Oracle_123@//localhost:1521/XEPDB1 > /dev/null"]
+      interval: 45s
+      timeout: 20s
+      retries: 5
+      start_period: 60s
+    networks:
+      - oracle_app
+  # api:
+  #   shm_size: '2gb'
+  #   container_name: oc-app-backend
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     database:
+  #       condition: service_healthy
+  #   links:
+  #     - database
+  #   ports:
+  #     - 3000:3000
+  #   networks:
+  #     - oracle_app
+  #   environment:
+  #     - GODROR_DRIVER_MODE=thin
+  #     - ORACLE_CONN="user=system password=Oracle_123 connectString=database:1521/XEPDB1"
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://api:3000/health/app"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+  #   restart: "unless-stopped"
+
+volumes:
+  oracle-xe-data:

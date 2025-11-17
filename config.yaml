@@ -1,0 +1,11 @@
+server:
+    name: "oc-app-backend"
+    host: "0.0.0.0"
+    port: 3000
+oracle:
+    primary:
+        dialect: "godror"
+        connString: "user=myapp password=mypass connectString=localhost:1521/XEPDB1"
+        maxOpenConn: 350
+        maxIdleConn: 10
+        maxConnLifeTimeInSecond: 10
